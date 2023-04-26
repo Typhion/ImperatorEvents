@@ -3,4 +3,5 @@ event.tmpl
 *.zip
 go.mod
 *.txt
+*.yml
 output

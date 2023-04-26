@@ -27,6 +27,27 @@ func addUtf8Bom(filename string) {
 	}
 }
 
+type Option struct {
+	Name    string
+	Effects string
+}
+
+func (o Option) String() string {
+	tmpl, err := template.New("option").Parse("option = {\n" +
+		"\t\tname = {{.Name}}\n" +
+		"{{.Effects}}" +
+		"\t}\n\n")
+	if err != nil {
+		panic(err)
+	}
+	var tpl bytes.Buffer
+	if err := tmpl.Execute(&tpl, o); err != nil {
+		fmt.Println(err.Error())
+		panic(err)
+	}
+	return tpl.String()
+}
+
 type Event struct {
 	Namespace        string
 	EventId          int
@@ -40,11 +61,7 @@ type Event struct {
 	WeightMultiplier string
 	Trigger          string
 	Immediate        string
-	Option           string
-	Option2          string
-	Option3          string
-	Option4          string
-	Option5          string
+	Options          []Option
 	After            string
 }
 
@@ -62,11 +79,7 @@ func (e Event) String() string {
 		"{{if .WeightMultiplier}}\t{{.WeightMultiplier}}\n\n{{end}}" +
 		"{{if .Trigger}}\t{{.Trigger}}\n\n{{end}}" +
 		"{{if .Immediate}}\t{{.Immediate}}\n\n{{end}}" +
-		"{{if .Option}}\t{{.Option}}\n{{end}}" +
-		"{{if .Option2}}\n\t{{.Option2}}\n{{end}}" +
-		"{{if .Option3}}\n\t{{.Option3}}\n{{end}}" +
-		"{{if .Option4}}\n\t{{.Option4}}\n{{end}}" +
-		"{{if .Option5}}\n\t{{.Option5}}\n{{end}}" +
+		"{{range .Options}}{{if .}}\t{{.}}{{end}}{{end}}" +
 		"{{if .After}}\n\t{{.After}}\n{{end}}" +
 		"}")
 	if err != nil {
@@ -80,15 +93,35 @@ func (e Event) String() string {
 	return tpl.String()
 }
 
+func (e Event) LocString() string {
+	tmpl, err := template.New("loc").Parse(" {{.Namespace}}_{{.EventId}}_title:0 \"\"\n" +
+		" {{.Namespace}}_{{.EventId}}_desc:0 \"\"\n" +
+		"{{range .Options}}{{if .Name}} {{.Name}}{{end}}:0 \"\"\n{{end}}")
+	if err != nil {
+		panic(err)
+	}
+	var tpl bytes.Buffer
+	if err := tmpl.Execute(&tpl, e); err != nil {
+		fmt.Println(err.Error())
+		panic(err)
+	}
+	return tpl.String()
+}
+
 type EventFile struct {
 	File      string
+	LocFile   string
 	Namespace string
 }
 
 func (e EventFile) makeFile(events []Event) {
 	e.File = "namespace = " + e.Namespace + "\n\n"
 	for i, event := range events {
-		event.EventId = i + 1
+		events[i].Namespace = e.Namespace
+		events[i].EventId = i + 1
+		for j := range event.Options {
+			event.Options[j].Name = fmt.Sprintf("%s_%d.%s", e.Namespace, event.EventId, string(rune(j+97)))
+		}
 		e.File += event.String() + "\n\n"
 	}
 	e.write()
@@ -102,6 +135,28 @@ func (e EventFile) write() {
 	}
 	defer fileOutput.Close()
 	_, err = fileOutput.WriteString(e.File)
+	if err != nil {
+		panic(err)
+	}
+	addUtf8Bom(filePath)
+}
+
+func (e EventFile) makeLocFile(events []Event) {
+	e.LocFile = "l_english:\n\n# Generated File\n\n"
+	for _, event := range events {
+		e.LocFile += event.LocString() + "\n"
+	}
+	e.writeLoc()
+}
+
+func (e EventFile) writeLoc() {
+	filePath := e.Namespace + "_l_english.yml"
+	fileOutput, err := os.Create(filePath)
+	if err != nil {
+		panic(err)
+	}
+	defer fileOutput.Close()
+	_, err = fileOutput.WriteString(e.LocFile)
 	if err != nil {
 		panic(err)
 	}
