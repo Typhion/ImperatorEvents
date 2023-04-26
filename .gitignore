@@ -1,0 +1,6 @@
+.idea
+event.tmpl
+event_generator_imperator.zip
+go.mod
+*.txt
+output
