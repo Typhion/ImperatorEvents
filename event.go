@@ -116,13 +116,13 @@ type EventFile struct {
 
 func (e EventFile) makeFile(events []Event) {
 	e.File = "namespace = " + e.Namespace + "\n\n"
-	for i, event := range events {
+	for i := range events {
 		events[i].Namespace = e.Namespace
 		events[i].EventId = i + 1
-		for j := range event.Options {
-			event.Options[j].Name = fmt.Sprintf("%s_%d.%s", e.Namespace, event.EventId, string(rune(j+97)))
+		for j := range events[i].Options {
+			events[i].Options[j].Name = fmt.Sprintf("%s_%d.%s", events[i].Namespace, events[i].EventId, string(rune(j+97)))
 		}
-		e.File += event.String() + "\n\n"
+		e.File += events[i].String() + "\n\n"
 	}
 	e.write()
 }

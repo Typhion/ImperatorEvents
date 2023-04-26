@@ -3,7 +3,6 @@ package main
 func main() {
 	events := []Event{
 		{
-			EventId:          0,
 			EventType:        "country_event",
 			Picture:          "interesting_histories_southern_india",
 			Hidden:           false,
@@ -46,7 +45,6 @@ func main() {
 			After: "",
 		},
 		{
-			EventId:          0,
 			EventType:        "country_event",
 			Picture:          "interesting_histories_southern_india",
 			Hidden:           false,
@@ -69,7 +67,6 @@ func main() {
 			After: "",
 		},
 		{
-			EventId:          0,
 			EventType:        "country_event",
 			Picture:          "interesting_histories_southern_india",
 			Hidden:           false,
